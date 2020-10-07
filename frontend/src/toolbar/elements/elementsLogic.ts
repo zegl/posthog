@@ -6,25 +6,32 @@ import { elementToActionStep, getAllClickTargets, getElementForStep, getRectForE
 import { actionsTabLogic } from '~/toolbar/actions/actionsTabLogic'
 import { toolbarButtonLogic } from '~/toolbar/button/toolbarButtonLogic'
 import { elementsLogicType } from 'types/toolbar/elements/elementsLogicType'
-import { ActionStepType, ActionType, ToolbarMode, ToolbarTab } from '~/types'
-import { ActionElementWithMetadata, ActionForm, ElementWithMetadata } from '~/toolbar/types'
+import { ActionStepType, ActionType } from '~/types'
+import {
+    ActionForm,
+    ActionElementMap,
+    ElementMap,
+    SelectedElementMeta,
+    InspectElementWithRect,
+    HeatmapElementWithRect,
+    SelectedActionElementWithRect,
+    ActionElementWithRect,
+} from '~/toolbar/types'
 import { currentPageLogic } from '~/toolbar/stats/currentPageLogic'
 import { toolbarLogic } from '~/toolbar/toolbarLogic'
 
-type ActionElementMap = Map<HTMLElement, ActionElementWithMetadata[]>
-type ElementMap = Map<HTMLElement, ElementWithMetadata>
-
 export const elementsLogic = kea<
     elementsLogicType<
-        ToolbarTab,
-        ToolbarMode,
         ActionStepType,
         ActionForm,
         ActionType,
-        ElementWithMetadata,
-        ActionElementWithMetadata,
         ActionElementMap,
-        ElementMap
+        ElementMap,
+        SelectedElementMeta,
+        HeatmapElementWithRect,
+        InspectElementWithRect,
+        SelectedActionElementWithRect,
+        ActionElementWithRect
     >
 >({
     actions: {
@@ -77,7 +84,7 @@ export const elementsLogic = kea<
         selectedElement: [
             null as HTMLElement | null,
             {
-                setSelectedElement: (_, { element }) => element,
+                setSelectedElement: (state, { element }) => (state === element ? null : element),
                 disableInspect: () => null,
                 createAction: () => null,
                 [heatmapLogic.actionTypes.disableHeatmap]: () => null,
@@ -109,8 +116,11 @@ export const elementsLogic = kea<
 
         heatmapElements: [
             (s) => [heatmapLogic.selectors.countedElements, s.rectUpdateCounter, toolbarLogic.selectors.buttonVisible],
-            (countedElements) =>
-                countedElements.map((e) => ({ ...e, rect: getRectForElement(e.element) } as ElementWithMetadata)),
+            (countedElements) => {
+                return countedElements.map(
+                    (e) => ({ ...e, rect: getRectForElement(e.element) } as HeatmapElementWithRect)
+                )
+            },
         ],
 
         allInspectElements: [
@@ -122,7 +132,7 @@ export const elementsLogic = kea<
             (s) => [s.allInspectElements, s.rectUpdateCounter, toolbarLogic.selectors.buttonVisible],
             (allInspectElements) =>
                 allInspectElements
-                    .map((element) => ({ element, rect: getRectForElement(element) } as ElementWithMetadata))
+                    .map((element) => ({ element, rect: getRectForElement(element) } as InspectElementWithRect))
                     .filter((e) => e.rect && e.rect.width * e.rect.height > 0),
         ],
 
@@ -131,64 +141,40 @@ export const elementsLogic = kea<
             (buttonActionsVisible) => buttonActionsVisible,
         ],
 
-        allActionElements: [
+        allSelectedActionElements: [
             (s) => [s.displayActionElements, actionsTabLogic.selectors.selectedEditedAction],
-            (displayActionElements, selectedEditedAction): ElementWithMetadata[] => {
+            (displayActionElements, selectedEditedAction) => {
+                const steps: SelectedActionElementWithRect[] = []
                 if (displayActionElements && selectedEditedAction?.steps) {
-                    const steps: ElementWithMetadata[] = []
-                    selectedEditedAction.steps.forEach((step, index) => {
+                    selectedEditedAction.steps.forEach((step, stepIndex) => {
                         const element = getElementForStep(step)
                         if (element) {
                             steps.push({
                                 element,
-                                index,
+                                stepIndex,
                             })
                         }
                     })
+                    return steps
                 }
-                return [] as ElementWithMetadata[]
+                return steps
             },
         ],
 
-        actionElements: [
-            (s) => [s.allActionElements, s.rectUpdateCounter, toolbarLogic.selectors.buttonVisible],
-            (allActionElements) =>
-                allActionElements.map((element) =>
+        selectedActionElements: [
+            (s) => [s.allSelectedActionElements, s.rectUpdateCounter, toolbarLogic.selectors.buttonVisible],
+            (allSelectedActionElements) => {
+                return allSelectedActionElements.map((element) =>
                     element.element ? { ...element, rect: getRectForElement(element.element) } : element
-                ),
-        ],
-
-        elementMap: [
-            (s) => [s.heatmapElements, s.inspectElements, s.actionElements, s.actionsListElements],
-            (heatmapElements, inspectElements, actionElements, actionsListElements): ElementMap => {
-                const elementMap = new Map<HTMLElement, ElementWithMetadata>()
-
-                inspectElements.forEach((e) => {
-                    elementMap.set(e.element, e)
-                })
-                heatmapElements.forEach((e) => {
-                    if (elementMap.get(e.element)) {
-                        elementMap.set(e.element, { ...elementMap.get(e.element), ...e })
-                    } else {
-                        elementMap.set(e.element, e)
-                    }
-                })
-                ;[...actionElements, ...actionsListElements].forEach((e) => {
-                    if (elementMap.get(e.element)) {
-                        elementMap.set(e.element, { ...elementMap.get(e.element), ...e })
-                    } else {
-                        elementMap.set(e.element, e)
-                    }
-                })
-                return elementMap
+                )
             },
         ],
 
         actionsForElementMap: [
             (s) => [actionsLogic.selectors.sortedActions, s.rectUpdateCounter, toolbarLogic.selectors.buttonVisible],
             (sortedActions): ActionElementMap => {
-                const actionsForElementMap = new Map<HTMLElement, ActionElementWithMetadata[]>()
-                sortedActions.forEach((action, index) => {
+                const actionsForElementMap = new Map<HTMLElement, ActionElementWithRect[]>()
+                sortedActions.forEach((action, actionIndex) => {
                     action.steps
                         ?.filter((step) => step.event === '$autocapture')
                         .forEach((step) => {
@@ -200,7 +186,7 @@ export const elementsLogic = kea<
                                     array = []
                                     actionsForElementMap.set(element, array)
                                 }
-                                array.push({ action, step, element, rect, index })
+                                array.push({ action, step, element, rect, actionIndex })
                             }
                         })
                 })
@@ -208,31 +194,52 @@ export const elementsLogic = kea<
             },
         ],
 
-        elementsWithActions: [
-            (s) => [s.actionsForElementMap],
-            (actionsForElementMap) => [...((actionsForElementMap.keys() as unknown) as HTMLElement[])],
-        ],
-
         actionsListElements: [
             (s) => [s.actionsForElementMap],
             (actionsForElementMap) =>
-                [...((actionsForElementMap.values() as unknown) as ActionElementWithMetadata[][])].map((a) => a[0]),
+                [...((actionsForElementMap.values() as unknown) as ActionElementWithRect[][])].map((a) => a[0]),
+        ],
+
+        elementMap: [
+            (s) => [s.heatmapElements, s.inspectElements, s.selectedActionElements, s.actionsListElements],
+            (heatmapElements, inspectElements, selectedActionElements, actionsListElements): ElementMap => {
+                const elementMap: ElementMap = new Map()
+
+                inspectElements.forEach((e) => {
+                    elementMap.set(e.element, e)
+                })
+                heatmapElements.forEach((e) => {
+                    if (elementMap.get(e.element)) {
+                        elementMap.set(e.element, { ...elementMap.get(e.element), ...e })
+                    } else {
+                        elementMap.set(e.element, e)
+                    }
+                })
+                ;[...selectedActionElements, ...actionsListElements].forEach((e) => {
+                    if (elementMap.get(e.element)) {
+                        elementMap.set(e.element, { ...elementMap.get(e.element), ...e })
+                    } else {
+                        elementMap.set(e.element, e)
+                    }
+                })
+                return elementMap
+            },
         ],
 
         elementsToDisplayRaw: [
             (s) => [
                 s.displayActionElements,
-                s.actionElements,
+                s.selectedActionElements,
                 s.inspectElements,
                 s.actionsListElements,
                 actionsTabLogic.selectors.selectedAction,
             ],
-            (displayActionElements, actionElements, inspectElements, actionsListElements, selectedAction) => {
+            (displayActionElements, selectedActionElements, inspectElements, actionsListElements, selectedAction) => {
                 if (inspectElements.length > 0) {
                     return inspectElements
                 }
-                if (displayActionElements && selectedAction && actionElements.length > 0) {
-                    return actionElements
+                if (displayActionElements && selectedAction && selectedActionElements.length > 0) {
+                    return selectedActionElements
                 }
                 if (displayActionElements && !selectedAction && actionsListElements.length > 0) {
                     return actionsListElements
@@ -251,13 +258,13 @@ export const elementsLogic = kea<
         labelsToDisplay: [
             (s) => [
                 s.displayActionElements,
-                s.actionElements,
+                s.selectedActionElements,
                 s.actionsListElements,
                 actionsTabLogic.selectors.selectedAction,
             ],
-            (displayActionElements, actionElements, actionsListElements, selectedAction) => {
-                if (displayActionElements && selectedAction && actionElements.length > 0) {
-                    return actionElements
+            (displayActionElements, selectedActionElements, actionsListElements, selectedAction) => {
+                if (displayActionElements && selectedAction && selectedActionElements.length > 0) {
+                    return selectedActionElements
                 }
                 if (displayActionElements && !selectedAction && actionsListElements.length > 0) {
                     return actionsListElements
@@ -277,7 +284,7 @@ export const elementsLogic = kea<
                             ...meta,
                             actionStep: elementToActionStep(meta.element),
                             actions: actions || [],
-                        }
+                        } as SelectedElementMeta
                     }
                 }
                 return null
@@ -295,7 +302,7 @@ export const elementsLogic = kea<
                             ...meta,
                             actionStep: elementToActionStep(meta.element),
                             actions: actions || [],
-                        }
+                        } as SelectedElementMeta
                     }
                 }
                 return null
@@ -313,7 +320,7 @@ export const elementsLogic = kea<
                             ...meta,
                             actionStep: elementToActionStep(meta.element),
                             actions: actions || [],
-                        }
+                        } as SelectedElementMeta
                     }
                 }
                 return null

@@ -7,13 +7,38 @@ export type ElementsEventType = {
     hash: string
 }
 
-export interface CountedHTMLElement {
+export interface HeatmapElement {
     count: number
     element: HTMLElement
-    hash: string
     selector: string
-    position?: number
+    position: number
     actionStep?: ActionStepType
+}
+
+export interface HeatmapElementWithRect extends HeatmapElement {
+    rect: DOMRect
+}
+
+export interface InspectElement {
+    element: HTMLElement
+}
+
+export interface InspectElementWithRect extends InspectElement {
+    rect: DOMRect
+}
+
+export interface SelectedActionElementWithRect {
+    element: HTMLElement
+    stepIndex: number
+    rect?: DOMRect
+}
+
+export interface ActionElementWithRect {
+    element: HTMLElement
+    rect?: DOMRect
+    actionIndex: number
+    action: ActionType
+    step?: ActionStepType
 }
 
 export interface ElementWithMetadata {
@@ -28,6 +53,12 @@ export interface ActionElementWithMetadata extends ElementWithMetadata {
     step?: ActionStepType
 }
 
+export type ActionElementMap = Map<HTMLElement, ActionElementWithMetadata[]>
+export type ElementMap = Map<HTMLElement, ElementWithMetadata | (ElementWithMetadata & HeatmapElementWithRect)>
+export interface SelectedElementMeta extends ElementWithMetadata {
+    actionStep: ActionStepType
+    actions: ActionElementWithMetadata[]
+}
 export type BoxColor = {
     backgroundBlendMode: string
     background: string

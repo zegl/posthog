@@ -7,7 +7,7 @@ import { toolbarLogic } from '~/toolbar/toolbarLogic'
 import { toast } from 'react-toastify'
 import { toolbarButtonLogic } from '~/toolbar/button/toolbarButtonLogic'
 import { actionsTabLogicType } from 'types/toolbar/actions/actionsTabLogicType'
-import { ActionType, ToolbarTab } from '~/types'
+import { ActionType } from '~/types'
 import { ActionForm, AntdFieldData } from '~/toolbar/types'
 import { FormInstance } from 'antd/es/form'
 
@@ -18,9 +18,7 @@ function newAction(element: HTMLElement | null): Partial<ActionType> {
     }
 }
 
-export const actionsTabLogic = kea<
-    actionsTabLogicType<ActionType, ActionForm, FormInstance, AntdFieldData, ToolbarTab>
->({
+export const actionsTabLogic = kea<actionsTabLogicType<ActionType, ActionForm, FormInstance, AntdFieldData>>({
     actions: {
         setForm: (form: FormInstance<ActionForm>) => ({ form }),
         selectAction: (id: number | null) => ({ id: id || null }),

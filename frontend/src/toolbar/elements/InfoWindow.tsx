@@ -5,24 +5,17 @@ import { elementsLogic } from '~/toolbar/elements/elementsLogic'
 import { ElementInfo } from '~/toolbar/elements/ElementInfo'
 
 export function InfoWindow(): JSX.Element | null {
-    const { hoverElement, hoverElementMeta, selectedElement, selectedElementMeta } = useValues(elementsLogic)
+    const { selectedElementMeta } = useValues(elementsLogic)
     const { setSelectedElement } = useActions(elementsLogic)
 
     // use rectUpdateCounter to reload component when it changes, but discard the output
     useValues(elementsLogic).rectUpdateCounter
 
-    const activeMeta = hoverElementMeta || selectedElementMeta
-
-    if (!activeMeta || !activeMeta.rect) {
+    if (!selectedElementMeta?.rect) {
         return null
     }
 
-    const pointerEvents = selectedElementMeta && (!hoverElement || hoverElement === selectedElement)
-    const onClose =
-        selectedElementMeta && activeMeta.element === selectedElementMeta.element
-            ? () => setSelectedElement(null)
-            : null
-    const { rect } = activeMeta
+    const { rect } = selectedElementMeta
 
     const windowWidth = Math.min(document.documentElement.clientWidth, window.innerWidth)
     const windowHeight = Math.min(document.documentElement.clientHeight, window.innerHeight)
@@ -56,7 +49,6 @@ export function InfoWindow(): JSX.Element | null {
     return (
         <div
             style={{
-                pointerEvents: pointerEvents ? 'all' : 'none',
                 position: 'absolute',
                 top,
                 bottom,
@@ -73,32 +65,29 @@ export function InfoWindow(): JSX.Element | null {
                 boxShadow: `hsla(4, 30%, 27%, 0.6) 0px 3px 10px 2px`,
             }}
         >
-            {onClose ? (
-                <div
-                    onClick={onClose}
-                    style={{
-                        pointerEvents: pointerEvents ? 'all' : 'none',
-                        position: 'absolute',
-                        top: -8,
-                        right: left + width > windowWidth - 20 ? -6 : -12,
-                        transformOrigin: 'top left',
-                        background: 'black',
-                        color: 'white',
-                        boxShadow: `hsla(4, 30%, 27%, 0.6) 0px 3px 10px 2px`,
-                        borderRadius: '100%',
-                        width: 24,
-                        height: 24,
-                        zIndex: 7,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-around',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                    }}
-                >
-                    <CloseOutlined />
-                </div>
-            ) : null}
+            <div
+                onClick={() => setSelectedElement(null)}
+                style={{
+                    position: 'absolute',
+                    top: -8,
+                    right: left + width > windowWidth - 20 ? -6 : -12,
+                    transformOrigin: 'top left',
+                    background: 'black',
+                    color: 'white',
+                    boxShadow: `hsla(4, 30%, 27%, 0.6) 0px 3px 10px 2px`,
+                    borderRadius: '100%',
+                    width: 24,
+                    height: 24,
+                    zIndex: 7,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-around',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                }}
+            >
+                <CloseOutlined />
+            </div>
             <div style={{ minHeight, maxHeight, overflow: 'auto' }}>
                 <ElementInfo />
             </div>

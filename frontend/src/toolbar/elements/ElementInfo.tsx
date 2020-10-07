@@ -6,20 +6,19 @@ import { heatmapLogic } from '~/toolbar/elements/heatmapLogic'
 import { Button, Statistic, Row, Col } from 'antd'
 import { elementsLogic } from '~/toolbar/elements/elementsLogic'
 import { ActionsListView } from '~/toolbar/actions/ActionsListView'
+import { ActionType } from '~/types'
 
 export function ElementInfo(): JSX.Element | null {
     const { clickCount } = useValues(heatmapLogic)
 
-    const { hoverElementMeta, selectedElementMeta } = useValues(elementsLogic)
+    const { selectedElementMeta } = useValues(elementsLogic)
     const { createAction } = useActions(elementsLogic)
 
-    const activeMeta = hoverElementMeta || selectedElementMeta
-
-    if (!activeMeta) {
+    if (!selectedElementMeta) {
         return null
     }
 
-    const { element, position, count, actionStep } = activeMeta
+    const { element, position, count, actionStep } = selectedElementMeta
 
     return (
         <>
@@ -52,12 +51,14 @@ export function ElementInfo(): JSX.Element | null {
             ) : null}
 
             <div style={{ padding: 15, borderLeft: '5px solid #94D674', background: 'hsla(100, 74%, 98%, 1)' }}>
-                <h1 className="section-title">Actions ({activeMeta.actions.length})</h1>
+                <h1 className="section-title">Actions ({selectedElementMeta.actions.length})</h1>
 
-                {activeMeta.actions.length === 0 ? (
+                {selectedElementMeta.actions.length === 0 ? (
                     <p>No actions include this element</p>
                 ) : (
-                    <ActionsListView actions={activeMeta.actions.map((a) => a.action)} />
+                    <ActionsListView
+                        actions={selectedElementMeta.actions.map((a) => a.action).filter((a) => !!a) as ActionType[]}
+                    />
                 )}
 
                 <Button size="small" onClick={() => createAction(element)}>

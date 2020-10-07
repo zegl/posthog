@@ -6,10 +6,10 @@ import { currentPageLogic } from '~/toolbar/stats/currentPageLogic'
 import { elementToActionStep, elementToSelector, trimElement } from '~/toolbar/utils'
 import { toolbarLogic } from '~/toolbar/toolbarLogic'
 import { heatmapLogicType } from 'types/toolbar/elements/heatmapLogicType'
-import { CountedHTMLElement, ElementsEventType } from '~/toolbar/types'
+import { HeatmapElement, ElementsEventType } from '~/toolbar/types'
 import { ActionStepType } from '~/types'
 
-export const heatmapLogic = kea<heatmapLogicType<ElementsEventType, CountedHTMLElement, ActionStepType>>({
+export const heatmapLogic = kea<heatmapLogicType<ElementsEventType, HeatmapElement, ActionStepType>>({
     actions: {
         enableHeatmap: true,
         disableHeatmap: true,
@@ -77,7 +77,7 @@ export const heatmapLogic = kea<heatmapLogicType<ElementsEventType, CountedHTMLE
         elements: [
             (selectors) => [selectors.events],
             (events) => {
-                const elements: CountedHTMLElement[] = []
+                const elements: HeatmapElement[] = []
                 events.forEach((event) => {
                     let combinedSelector
                     let lastSelector
@@ -86,7 +86,7 @@ export const heatmapLogic = kea<heatmapLogicType<ElementsEventType, CountedHTMLE
                         combinedSelector = lastSelector ? `${selector} > ${lastSelector}` : selector
 
                         try {
-                            const domElements = Array.from(document.querySelectorAll(combinedSelector))
+                            const domElements = Array.from(document.querySelectorAll(combinedSelector)) as HTMLElement[]
 
                             if (domElements.length === 1) {
                                 const e = event.elements[i]
@@ -109,8 +109,8 @@ export const heatmapLogic = kea<heatmapLogicType<ElementsEventType, CountedHTMLE
                                         element: domElements[0],
                                         count: event.count,
                                         selector: selector,
-                                        hash: event.hash,
-                                    } as CountedHTMLElement)
+                                        position: -1,
+                                    })
                                     return null
                                 }
                             }
@@ -139,7 +139,7 @@ export const heatmapLogic = kea<heatmapLogicType<ElementsEventType, CountedHTMLE
                     }
                 })
 
-                return elements
+                return elements.map((e, i) => ({ ...e, position: i + 1 }))
             },
         ],
         countedElements: [
@@ -159,15 +159,18 @@ export const heatmapLogic = kea<heatmapLogicType<ElementsEventType, CountedHTMLE
                     }
                 })
 
-                const countedElements = [] as CountedHTMLElement[]
+                const countedElements = [] as HeatmapElement[]
                 elementCounter.forEach((count, element) => {
                     const selector = elementSelector.get(element)
-                    countedElements.push({
-                        count,
-                        element,
-                        selector,
-                        actionStep: elementToActionStep(element),
-                    } as CountedHTMLElement)
+                    if (selector) {
+                        countedElements.push({
+                            count,
+                            element,
+                            selector,
+                            position: -1,
+                            actionStep: elementToActionStep(element),
+                        })
+                    }
                 })
 
                 countedElements.sort((a, b) => b.count - a.count)
