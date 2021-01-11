@@ -71,7 +71,7 @@ export function Organization(): JSX.Element {
                                         <a
                                             href="#"
                                             onClick={() => {
-                                                api.update('api/user', {
+                                                api.update('api/users/@me', {
                                                     user: { current_organization_id: organization.id },
                                                 }).then(() => {
                                                     location.reload()
@@ -138,11 +138,11 @@ export function Projects(): JSX.Element {
                                         <a
                                             href="#"
                                             onClick={() => {
-                                                api.update('api/user', { user: { current_team_id: team.id } }).then(
-                                                    () => {
-                                                        location.reload()
-                                                    }
-                                                )
+                                                api.update('api/users/@me', {
+                                                    user: { current_team_id: team.id },
+                                                }).then(() => {
+                                                    location.reload()
+                                                })
                                             }}
                                         >
                                             <EnterOutlined size={1} style={{ marginRight: '0.5rem' }} />

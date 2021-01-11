@@ -7,7 +7,7 @@ describe('Setup', () => {
     it('See suggestion and save', () => {
         cy.getCookie('csrftoken').then((csrftoken) => {
             cy.request({
-                url: '/api/user/',
+                url: '/api/users/@me/',
                 body: { team: { app_urls: [] } },
                 method: 'PATCH',
                 headers: {

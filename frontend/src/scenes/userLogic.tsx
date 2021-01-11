@@ -90,7 +90,7 @@ export const userLogic = kea<userLogicType<UserType, EventProperty, UserUpdateTy
     listeners: ({ actions }) => ({
         loadUser: async ({ resetOnFailure }) => {
             try {
-                const user: UserType = await api.get('api/user')
+                const user: UserType = await api.get('api/users/@me')
                 actions.setUser(user)
 
                 if (user && user.id) {
@@ -127,7 +127,7 @@ export const userLogic = kea<userLogicType<UserType, EventProperty, UserUpdateTy
         },
         userUpdateRequest: async ({ update, updateKey }) => {
             try {
-                const user = await api.update('api/user', update)
+                const user = await api.update('api/users/@me', update)
                 actions.userUpdateSuccess(user, updateKey)
             } catch (error) {
                 actions.userUpdateFailure(error, updateKey)

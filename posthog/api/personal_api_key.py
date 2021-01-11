@@ -35,6 +35,7 @@ class PersonalAPIKeyViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
+    queryset = PersonalAPIKey.objects.none()
     serializer_class = PersonalAPIKeySerializer
     lookup_field = "id"
 

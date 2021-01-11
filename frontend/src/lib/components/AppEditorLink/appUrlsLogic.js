@@ -93,7 +93,7 @@ export const appUrlsLogic = kea({
     listeners: ({ values, sharedListeners, props }) => ({
         addUrlAndGo: async ({ value }) => {
             let app_urls = [...values.appUrls, value]
-            await api.update('api/user', { team: { app_urls } })
+            await api.update('api/users/@me', { team: { app_urls } })
             window.location.href = appEditorUrl(props.actionId, value)
         },
         removeUrl: sharedListeners.saveAppUrls,

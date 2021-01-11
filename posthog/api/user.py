@@ -2,7 +2,7 @@ import json
 import os
 import secrets
 import urllib.parse
-from typing import Optional, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 import posthoganalytics
 import requests
@@ -10,11 +10,12 @@ from django.conf import settings
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import Model
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_http_methods
 from loginas.utils import is_impersonated_session
-from rest_framework import serializers
+from rest_framework import permissions, request, serializers
 
 from posthog.auth import authenticate_secondarily
 from posthog.ee import is_ee_enabled
@@ -23,6 +24,13 @@ from posthog.models import Team, User
 from posthog.models.organization import Organization
 from posthog.plugins import can_configure_plugins_via_api, can_install_plugins_via_api, reload_plugins_on_workers
 from posthog.version import VERSION
+
+
+class OnlyMePermission(permissions.BasePermission):
+    """Disallow access to other users."""
+
+    def has_object_permission(self, request: request.Request, view, object: Model) -> bool:
+        return request.user == object
 
 
 class UserSerializer(serializers.ModelSerializer):

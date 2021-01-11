@@ -20,6 +20,7 @@ from . import (
     personal_api_key,
     plugin,
     team,
+    user,
 )
 
 
@@ -49,6 +50,7 @@ organizations_router.register(
 organizations_router.register(
     r"invites", organization_invite.OrganizationInviteViewSet, "organization_invites", ["organization_id"],
 )
+users_router = router.register(r"users", user.UserViewSet)
 
 if is_ee_enabled():
     try:

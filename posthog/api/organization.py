@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import posthoganalytics
 from django.conf import settings
@@ -49,15 +49,12 @@ class PremiumMultiorganizationPermissions(permissions.BasePermission):
 
 class OrganizationSerializer(serializers.ModelSerializer):
     membership_level = serializers.SerializerMethodField(read_only=True)
+    teams = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Organization
-        fields = ["id", "name", "created_at", "updated_at", "membership_level"]
-        read_only_fields = [
-            "id",
-            "created_at",
-            "updated_at",
-        ]
+        fields = ["id", "name", "created_at", "updated_at", "teams", "available_features", "membership_level"]
+        read_only_fields = ["id", "created_at", "updated_at", "available_features"]
 
     def create(self, validated_data: Dict, *args: Any, **kwargs: Any) -> Organization:
         serializers.raise_errors_on_nested_writes("create", self, validated_data)
@@ -69,6 +66,9 @@ class OrganizationSerializer(serializers.ModelSerializer):
             organization=organization, user=self.context["request"].user
         ).first()
         return membership.level if membership is not None else None
+
+    def get_teams(self, organization: Organization) -> List[dict]:
+        return [row for row in organization.teams.order_by("-created_at").values("name", "id")]  # type: ignore
 
 
 class OrganizationViewSet(viewsets.ModelViewSet):
