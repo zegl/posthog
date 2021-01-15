@@ -3,26 +3,38 @@ name: PostHog FOSS
 on:
     push:
         branches:
+            - main
             - master
 
 jobs:
     repo-sync:
         name: Sync posthog-foss with posthog
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-20.04
         steps:
-            - name: Sync repositories 1 to 1
-              uses: ungless/git-sync@master # tag syncing is not currently part of wei/git-sync
+            - name: Sync files 1 to 1
+              uses: wei/git-sync@v2
               with:
                   source_repo: 'https://${{ secrets.SYNC_GITHUB_TOKEN }}@github.com/posthog/posthog.git'
                   source_branch: 'master'
                   destination_repo: 'https://${{ secrets.SYNC_GITHUB_TOKEN }}@github.com/posthog/posthog-foss.git'
                   destination_branch: 'master'
+
+            - name: Sync tags 1 to 1
+              uses: wei/git-sync@v2
+              with:
+                  source_repo: 'https://${{ secrets.SYNC_GITHUB_TOKEN }}@github.com/posthog/posthog.git'
+                  source_branch: 'refs/tags/*'
+                  destination_repo: 'https://${{ secrets.SYNC_GITHUB_TOKEN }}@github.com/posthog/posthog-foss.git'
+                  destination_branch: 'refs/tags/*'
+
             - name: Checkout posthog-foss
               uses: actions/checkout@v2
               with:
                   repository: 'posthog/posthog-foss'
                   ref: master
-                  token: ${{ secrets.SYNC_GITHUB_TOKEN }} # SYNC_GITHUB_TOKEN is a PAT token with the workflows scope which is not in GITHUB_TOKEN
+                  # SYNC_GITHUB_TOKEN is a PAT token with the workflows scope which is not in GITHUB_TOKEN
+                  token: ${{ secrets.SYNC_GITHUB_TOKEN }}
+
             - name: Commit "Sync and remove all non-FOSS parts"
               uses: EndBug/add-and-commit@v4
               with:
