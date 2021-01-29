@@ -1,11 +1,10 @@
 import { hot } from 'react-hot-loader/root'
 
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useActions, useValues } from 'kea'
 import { Alert, Layout } from 'antd'
 import { ToastContainer, Slide } from 'react-toastify'
 
-import { Sidebar } from '~/layout/Sidebar'
 import { MainNavigation, TopNavigation } from '~/layout/navigation'
 import { TopContent } from '~/layout/TopContent'
 import { BillingToolbar } from 'lib/components/BillingToolbar'
@@ -39,7 +38,6 @@ function _App(): JSX.Element | null {
     const { location } = useValues(router)
     const { replace } = useActions(router)
     // used for legacy navigation [Sidebar.js]
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(typeof window !== 'undefined' && window.innerWidth <= 991)
     const { featureFlags } = useValues(featureFlagLogic)
 
     useEffect(() => {
@@ -105,7 +103,7 @@ function _App(): JSX.Element | null {
     if (!scene || sceneConfig.plain) {
         return (
             <Layout style={{ minHeight: '100vh' }}>
-                {featureFlags['navigation-1775'] && !sceneConfig.hideTopNav ? <TopNavigation /> : null}
+                {!sceneConfig.hideTopNav ? <TopNavigation /> : null}
                 <SceneComponent user={user} {...params} />
                 {essentialElements}
             </Layout>
@@ -120,31 +118,21 @@ function _App(): JSX.Element | null {
         <>
             <UpgradeModal />
             <Layout>
-                {featureFlags['navigation-1775'] ? (
-                    <MainNavigation />
-                ) : (
-                    <Sidebar
-                        user={user}
-                        sidebarCollapsed={sidebarCollapsed}
-                        setSidebarCollapsed={setSidebarCollapsed}
-                    />
-                )}
+                <MainNavigation />
                 <Layout
-                    className={`${sceneConfig.dark ? 'bg-mid' : ''}${
-                        !featureFlags['navigation-1775'] && !sidebarCollapsed ? ' with-open-sidebar' : ''
-                    }`}
+                    className={`${sceneConfig.dark ? 'bg-mid' : ''}${!sidebarCollapsed ? ' with-open-sidebar' : ''}`}
                     style={{ minHeight: '100vh' }}
                 >
-                    {!sceneConfig.hideTopNav && featureFlags['navigation-1775'] ? <TopNavigation /> : <TopContent />}
+                    {!sceneConfig.hideTopNav ? <TopNavigation /> : <TopContent />}
                     <Layout.Content className="main-app-content" data-attr="layout-content">
                         {!sceneConfig.hideDemoWarnings && <DemoWarning />}
 
                         {!featureFlags['hide-billing-toolbar'] && <BillingToolbar />}
-                        {featureFlags['navigation-1775'] ? <BackTo /> : null}
+                        <BackTo />
                         {currentTeam && !currentTeam.completed_snippet_onboarding && !sceneConfig.hideDemoWarnings && (
                             <Alert
                                 type="warning"
-                                style={{ marginTop: featureFlags['navigation-1775'] ? '1rem' : 0 }}
+                                style={{ marginTop: '1rem' }}
                                 message={
                                     <>
                                         You haven't sent any events to this project yet. Grab{' '}
