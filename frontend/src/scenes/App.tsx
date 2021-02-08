@@ -98,7 +98,7 @@ function _App(): JSX.Element | null {
         ) : null
     }
 
-    if (!scene || sceneConfig.plain) {
+    if (sceneConfig.plain) {
         return (
             <Layout style={{ minHeight: '100vh' }}>
                 {!sceneConfig.hideTopNav && <TopNavigation />}
@@ -119,25 +119,27 @@ function _App(): JSX.Element | null {
                 <MainNavigation />
                 <Layout className={`${sceneConfig.dark ? 'bg-mid' : ''}`} style={{ minHeight: '100vh' }}>
                     {!sceneConfig.hideTopNav && <TopNavigation />}
-                    <Layout.Content className="main-app-content" data-attr="layout-content">
-                        {!sceneConfig.hideDemoWarnings && <DemoWarning />}
+                    {scene ? (
+                        <Layout.Content className="main-app-content" data-attr="layout-content">
+                            {!sceneConfig.hideDemoWarnings && <DemoWarning />}
 
-                        {!featureFlags['hide-billing-toolbar'] && <BillingToolbar />}
-                        <BackTo />
-                        {currentTeam && !sceneConfig.hideDemoWarnings && !currentTeam.ingested_event && (
-                            <Alert
-                                type="warning"
-                                style={{ marginTop: '1rem' }}
-                                message={
-                                    <>
-                                        You haven't sent any events to this project yet. Grab{' '}
-                                        <Link to="/project/settings">a snippet or library</Link> to get started!
-                                    </>
-                                }
-                            />
-                        )}
-                        <SceneComponent user={user} {...params} />
-                    </Layout.Content>
+                            {!featureFlags['hide-billing-toolbar'] && <BillingToolbar />}
+                            <BackTo />
+                            {currentTeam && !sceneConfig.hideDemoWarnings && !currentTeam.ingested_event && (
+                                <Alert
+                                    type="warning"
+                                    style={{ marginTop: '1rem' }}
+                                    message={
+                                        <>
+                                            You haven't sent any events to this project yet. Grab{' '}
+                                            <Link to="/project/settings">a snippet or library</Link> to get started!
+                                        </>
+                                    }
+                                />
+                            )}
+                            <SceneComponent user={user} {...params} />
+                        </Layout.Content>
+                    ) : null}
                 </Layout>
                 {essentialElements}
             </Layout>
