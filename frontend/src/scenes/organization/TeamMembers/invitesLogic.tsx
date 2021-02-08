@@ -6,6 +6,8 @@ import { CheckCircleOutlined } from '@ant-design/icons'
 import { OrganizationInviteType } from '~/types'
 import { invitesLogicType } from './invitesLogicType'
 import { copyToClipboard } from 'lib/utils'
+import { eventUsageLogic } from 'lib/utils/eventUsageLogic'
+import { userLogic } from 'scenes/userLogic'
 
 export const invitesLogic = kea<invitesLogicType>({
     loaders: ({ values }) => ({
@@ -44,6 +46,12 @@ export const invitesLogic = kea<invitesLogicType>({
             },
         },
     }),
+    listeners: {
+        createInviteSuccess: async () => {
+            const nameProvided = false // TODO: Change when adding support for names on invites
+            eventUsageLogic.actions.reportInviteAttempted(nameProvided, userLogic.values.user?.email_service_available)
+        },
+    },
     events: ({ actions }) => ({
         afterMount: actions.loadInvites,
     }),
