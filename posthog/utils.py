@@ -541,3 +541,11 @@ def get_safe_cache(cache_key: str):
         except:
             pass
     return None
+
+
+def is_valid_regex(value: str) -> bool:
+    try:
+        re.compile(value)
+        return True
+    except re.error:
+        return False
