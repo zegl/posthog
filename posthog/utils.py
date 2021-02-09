@@ -543,7 +543,7 @@ def get_safe_cache(cache_key: str):
     return None
 
 
-def is_valid_regex(value: str) -> bool:
+def is_valid_regex(value: Any) -> bool:
     try:
         re.compile(value)
         return True
